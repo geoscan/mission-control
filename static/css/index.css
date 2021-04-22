@@ -1,0 +1,53 @@
+#mainnav {
+    position: fixed;
+    min-width: 170px;
+    max-width: 20%;
+    height: 100%;
+    display: block;
+    overflow: auto;
+    white-space: nowrap;
+}
+
+#menu {
+    display: block;
+}
+
+/* img {
+    width: 100%;
+} */
+
+.menu-item {
+    margin-left: 10%;
+}
+
+#start_server, #preflight, #restart {
+    margin-top: 30px;
+}
+
+#formh1 {
+    text-align: center;
+    margin-top: 3%;
+}
+
+#formh2 {
+    word-wrap: break-word;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+#content {
+    overflow-y: hidden;
+}
+
+form {
+    overflow: hidden;
+}
+
+#header {
+    background-color: #EC4D0F;
+    color: #fff"
+}
+
+#mag_status, #nav_status, #mag_text, #nav_text {
+    margin-left: 20px;
+}

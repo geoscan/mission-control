@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Mission Control
+        </title>
+        <meta charset="UTF-8">
+
+        <link rel="stylesheet" href="{{ url_for('static',filename='css/index.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+    </head>
+
+    <body>
+        <div id="var" hostname="{{ host }}" port="{{ port }}"></div>
+        <script src="{{ url_for('static',filename='js/react.production.min.js') }}" crossorigin></script>
+        <script src="{{ url_for('static',filename='js/react-dom.production.min.js') }}" crossorigin></script>
+        <script src="{{ url_for('static',filename='js/react-bootstrap.min.js') }}" crossorigin></script>
+        <script src="{{ url_for('static',filename='js/babel.min.js') }}"></script>
+        <div id="root"></div>
+        <script src="{{ url_for('static',filename='js/index.js') }}" type="text/babel"></script>
+    </body>
+</html>
