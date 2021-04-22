@@ -5,7 +5,7 @@ Button = ReactBootstrap.Button;
 class MissionNavItem extends React.Component{
     render() {
         return (
-            <Nav.Item className={this.props.class}>
+            <Nav.Item id={this.props.id}>
                 <Nav.Link onClick={this.props.onclick}>{this.props.text}</Nav.Link>
             </Nav.Item>
         );
@@ -13,50 +13,100 @@ class MissionNavItem extends React.Component{
 }
 
 class MAVLinkForm extends React.Component{
+    api = `http://${document.getElementById("var").getAttribute("hostname")}:${document.getElementById("var").getAttribute("port")}`;
+
     constructor(props) {
         super(props);
-        this.start_click = this.start_click.bind(this);
-        this.restart_click = this.restart_click.bind(this);
+        this.state = {
+            launch: -1
+        };
+        this.startClick = this.startClick.bind(this);
+        this.restartClick = this.restartClick.bind(this);
     }    
 
 
-    start_click() {
+    startClick() {
+        const { launch } = this.state;
+        var requestOption = {};
 
+        if (launch == 1) {
+            requestOption = {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                   },
+                body: JSON.stringify({ command: 0})
+            };
+        } else {
+            requestOption = {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                   },
+                body: JSON.stringify({ command: 1 })
+            };
+        };
+        fetch(this.api+"/mavlink", requestOption);
     }
 
-    restart_click() {
-
+    restartClick() {
+        var requestOption = {
+            method: "POST",
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        };
+        fetch(this.api+"/restart", requestOption);
     }
 
     render() {
+        const { launch } = this.state;
         var content_style = {
             display: "inline-grid",
             overflow: "hidden",
             width: `${document.body.clientWidth - this.props.nav_ref.current.offsetWidth -60}px`,
             marginLeft: `${this.props.nav_ref.current.offsetWidth + 30}px`
         };
+        fetch(this.api+"/status")
+        .then(res => res.json())
+        .then(
+          (result) => {
+            this.setState({
+              launch: result.launch
+            });
+          }
+        );
 
-        var vars = document.getElementById("var");
+        var start_button = <Button></Button>
+        if (launch == 1) {
+            start_button = <Button id="start_server" variant="outline-danger" onClick={this.startClick}>Выключить сервер</Button>
+        } else {
+            start_button = <Button id="start_server" variant="outline-success" onClick={this.startClick}>Запустить сервер</Button>
+        }
+
         return (
             <div style={content_style}>
                 <h1 id="formh1">Управление сервером MAVLink</h1>
-                <Button id="start_server" variant="outline-success">Запустить сервер</Button>
-                <Button id="restart" variant="outline-primary">Перезагрузить плату</Button>
+                {start_button}
+                <Button id="restart" variant="outline-primary" onClick={this.restartClick}>Перезагрузить плату</Button>
             </div>
         );
     }
 }
 
 class PreflightForm extends React.Component {
-    api = `http://${document.getElementById("var").getAttribute("hostname")}:${document.getElementById("var").getAttribute("port")}/status`
+    api = `http://${document.getElementById("var").getAttribute("hostname")}:${document.getElementById("var").getAttribute("port")}/preflight`
 
     constructor(props) {
         super(props);
         this.state = {
             preflight_clicked: false,
             mag: -1,
-            navigation: -1
-
+            navigation: -1,
+            status: -1
         };
         this.preflight_click = this.preflight_click.bind(this);
         this.props.check = <div></div>;
@@ -81,30 +131,60 @@ class PreflightForm extends React.Component {
             text = 'Выполнить подготовку';
         } else {
             text = 'Выполняем проверку';
-            if ((this.state.mag != 1) || (this.state.navigation != 1)){
+            if ((this.state.mag != 1) & (this.state.navigation != 1)){
                 fetch(this.api)
                     .then(res => res.json())
                     .then(
                         (result) => {
                             this.setState({
                                 mag: result.mag,
-                                navigation : result.navigation
+                                navigation : result.navigation,
+                                status: result.status
                             })
                         }
                     );
             }
             var magimg = "";
-            if (this.state.mag == 1) {
-                magimg = "/static/img/ok.svg";
+            var navimg = "";
+            var warning = [];
+            if (this.state.status == 1) {
+                if (this.state.mag == 1) {
+                    magimg = "/static/img/ok.svg";
+                } else {
+                    magimg = "/static/img/bad.svg";
+                    warning.push(<li>Параметр Imu_mag_Enabled не равен 0</li>);
+                }
+
+                if (this.state.navigation == 1) {
+                    navimg = "/static/img/ok.svg";
+                } else {
+                    navimg = "/static/img/bad.svg";
+                    warning.push(<li>Переключите систему позиционирования на GPS</li>);
+                }
             } else {
                 magimg = "/static/img/bad.svg";
+                navimg = "/static/img/bad.svg";
+                if (this.state.status == 2) {
+                    warning.push(<li>Сервер MAVLink не включен, перейдите во вкладку Управление и запустите сервер</li>)
+                } else if (this.state.status == 0) {
+                    warning.push(<li>Система запускается. Немного подождите и выполните проверку снова</li>)
+                } else {
+                    warning.push(<li>Произошел сбой в работе Mission Control</li>)
+                }
             }
 
-            var navimg = "";
-            if (this.state.navigation == 1) {
-                navimg = "/static/img/ok.svg";
+            if (warning.length == 0) {
+                var warning_div = <div id="warnings">
+                    <h2>Предупреждения:</h2>
+                    Нет
+                </div>;
             } else {
-                navimg = "/static/img/bad.svg";
+            var warning_div = <div id="warnings">
+                <h2>Предупреждения:</h2>
+                <ul>
+                    {warning}
+                </ul>
+            </div>;
             }
 
             this.props.check = <div>
@@ -125,8 +205,10 @@ class PreflightForm extends React.Component {
                     />
                     <a id="nav_text">Система позиционирования</a>
                 </div>
+                <br></br>
+                {warning_div}
             </div>;
-            if ((this.state.mag == 1) & (this.state.navigation == 1)) {
+            if ((this.state.mag != -1) & (this.state.navigation != -1)) {
                 this.setState({
                     preflight_clicked: false,
                     mag: -1,
@@ -164,8 +246,8 @@ class MissionNav extends React.Component {
                     Mission Control
                 </Navbar.Brand>
                 <Nav id="menu">
-                    <MissionNavItem text="Управление сервером MAVLink" onclick={() => ReactDOM.render(<MAVLinkForm nav_ref={this.myInput}/>, document.getElementById("content"))}/>
-                    <MissionNavItem text="Предполетная подготовка" onclick={() => ReactDOM.render(<PreflightForm nav_ref={this.myInput}/>, document.getElementById("content"))}/>
+                    <MissionNavItem id="preflight" text="Подготовка" onclick={() => ReactDOM.render(<PreflightForm nav_ref={this.myInput}/>, document.getElementById("content"))}/>
+                    <MissionNavItem id="manage" text="Управление" onclick={() => ReactDOM.render(<MAVLinkForm nav_ref={this.myInput}/>, document.getElementById("content"))}/>
                 </Nav>
             </Navbar>
         )
