@@ -89,9 +89,10 @@ class MAVLinkForm extends React.Component{
 
         return (
             <div style={content_style}>
-                <h1 id="formh1">Управление сервером MAVLink</h1>
+                <h1 id="formh1">Управление бортом</h1>
                 {start_button}
                 <Button id="restart" variant="outline-primary" onClick={this.restartClick}>Перезагрузить плату</Button>
+                <Button id="download" variant="outline-primary" href={`${this.api}/photo`}>Скачать снимки</Button>
             </div>
         );
     }
@@ -238,12 +239,11 @@ class MissionNav extends React.Component {
         return (
             <Navbar ref={this.myInput} id="mainnav" bg="light" className="scroll">
                 <Navbar.Brand>
-                    {/* <img
+                    <img
                         src="/static/img/logo.svg"
                         width="200"
                         height="50"
-                    /> */}
-                    Mission Control
+                    />
                 </Navbar.Brand>
                 <Nav id="menu">
                     <MissionNavItem id="preflight" text="Подготовка" onclick={() => ReactDOM.render(<PreflightForm nav_ref={this.myInput}/>, document.getElementById("content"))}/>

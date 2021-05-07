@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
-import rospy
-import os, sys, subprocess
+import rospy, os, sys, subprocess, shutil
 sys.path.append("/home/ubuntu/geoscan_ws/src/gs_core/src/")
 from restart import restart as restart_board
 from time import sleep
-from flask import Flask,render_template, jsonify, request
+from flask import Flask,render_template, jsonify, request, send_file
 from rospy import ServiceProxy
 from gs_interfaces.msg import Parameter
 from gs_interfaces.srv import NavigationSystem, ParametersList
@@ -44,7 +43,7 @@ def preflight():
         return jsonify(mag=0, navigation=0, status=2)
     try:
         for param in param_proxy().params:
-            if param.name.data == 'Imu_mag_Enabled':
+            if param.name == 'Imu_magEnabled':
                 mag = not bool(param.value)
 
         system = nav_proxy()
@@ -80,6 +79,11 @@ def mavlink():
             launch.terminate()
             launch = None
             return jsonify(status=0)
+
+@app.route('/photo')
+def download():
+    shutil.make_archive("/home/ubuntu/photo", 'zip', "/home/ubuntu/photo")
+    return send_file("/home/ubuntu/photo.zip", cache_timeout=-1)
 
 try:
     argv = sys.argv
