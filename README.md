@@ -1,2 +1,2 @@
 # mission-control
- Mission Control for Geoscan Pioneer Max
+Mission Control -это веб-приложение для подготовки квадрокоптера Геоскан Пионер Макс к АФС
